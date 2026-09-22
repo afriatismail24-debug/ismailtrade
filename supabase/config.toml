@@ -1,0 +1,2 @@
+[functions.mt5-proxy]
+verify_jwt = true
