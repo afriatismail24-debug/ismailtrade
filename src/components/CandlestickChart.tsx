@@ -231,9 +231,9 @@ export function CandlestickChart({ candles, liveMode, trades }: Props) {
               : 'bg-slate-700/50 text-slate-400 border border-slate-600/40'
           }`}
         >
-          {liveMode ? 'LIVE BINANCE FEED' : 'SIMULATED'}
+          {liveMode ? 'LIVE GOLD FEED' : 'SIMULATED'}
         </span>
-        <span className="text-xs text-slate-400 font-medium">BTC/USDT</span>
+        <span className="text-xs text-slate-400 font-medium">XAU/USD (Gold)</span>
       </div>
       {/* Legend for price lines */}
       <div className="absolute bottom-2 left-3 flex items-center gap-3 pointer-events-none text-[10px]">

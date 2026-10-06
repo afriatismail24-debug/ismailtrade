@@ -13,7 +13,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import type { ApiConfig, Exchange, Mode, MT5Config, MT5AccountInfo } from '@/types';
-import { testMT5Connection } from '@/lib/mt5Service';
+import { provisionMT5Account, testMT5Connection } from '@/lib/mt5Service';
 
 interface Props {
   config: ApiConfig;
@@ -66,11 +66,27 @@ export function ApiConfigPanel({
   const handleTestConnection = async () => {
     setTesting(true);
     setTestResult(null);
-    const result = await testMT5Connection(mt5);
+
+    let accountId = mt5.accountId;
+    if (!accountId) {
+      const provisioned = await provisionMT5Account(mt5);
+      if (!provisioned.success || !provisioned.accountId) {
+        setTestResult({ ok: false, error: provisioned.error ?? 'Could not provision the MT5 account' });
+        setTesting(false);
+        return;
+      }
+      accountId = provisioned.accountId;
+      const updatedConfig = { ...mt5, accountId };
+      setMt5(updatedConfig);
+      onSaveMT5(updatedConfig);
+    }
+
+    const result = await testMT5Connection({ ...mt5, accountId });
     setTestResult({ ok: result.success, info: result.info, error: result.error });
-    if (result.success && result.accountId) {
-      setMt5({ ...mt5, accountId: result.accountId });
-      onSaveMT5({ ...mt5, accountId: result.accountId });
+    if (result.success && result.accountId && result.accountId !== accountId) {
+      const updatedConfig = { ...mt5, accountId: result.accountId };
+      setMt5(updatedConfig);
+      onSaveMT5(updatedConfig);
     }
     setTesting(false);
   };

@@ -22,13 +22,14 @@ interface MT5Request {
   };
 }
 
-const META_API_BASE = "https://api.metaapi.cloud";
+const META_API_BASE = "https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai";
+const META_API_CLIENT_BASE = "https://mt-client-api-v1.new-york.agiliumtrade.ai";
 
 async function provisionAccount(token: string, server: string, login: string, password: string) {
-  const res = await fetch(`${META_API_BASE}/provisioning/provisioning-profiles`, {
+  const res = await fetch(`${META_API_BASE}/users/current/accounts`, {
     method: "GET",
     headers: {
-      "Authorization": `Bearer ${token}`,
+      "auth-token": token,
       "Content-Type": "application/json",
     },
   });
@@ -36,28 +37,33 @@ async function provisionAccount(token: string, server: string, login: string, pa
     const text = await res.text();
     throw new Error(`MetaApi auth check failed (${res.status}): ${text}`);
   }
-  const profiles = await res.json();
+  const accounts = await res.json();
 
-  const existing = profiles.find(
-    (p: any) => p.login === login && p.serverName === server,
+  const existing = accounts.find(
+    (account: any) => String(account.login) === login && account.server === server,
   );
 
   if (existing) {
-    return { accountId: existing.id, provisioned: false };
+    const existingId = existing.id ?? existing._id;
+    if (!existingId) {
+      throw new Error(`Existing account found but has no id. Response: ${JSON.stringify(existing)}`);
+    }
+    return { accountId: existingId, provisioned: false };
   }
 
-  const createRes = await fetch(`${META_API_BASE}/provisioning/provisioning-profiles`, {
+  const createRes = await fetch(`${META_API_BASE}/users/current/accounts`, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${token}`,
+      "auth-token": token,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       name: `bolt-${login}`,
       login,
       password,
-      serverName: server,
-      type: "MT5",
+      server,
+      platform: "mt5",
+      magic: 0,
       region: "new-york",
     }),
   });
@@ -68,14 +74,20 @@ async function provisionAccount(token: string, server: string, login: string, pa
   }
 
   const created = await createRes.json();
-  return { accountId: created.id, provisioned: true };
+  const newAccountId = created.id ?? created.accountId ?? created._id;
+  if (!newAccountId) {
+    throw new Error(`Provisioning succeeded but no account id in response: ${JSON.stringify(created)}`);
+  }
+  return { accountId: newAccountId, provisioned: true };
 }
 
 async function getAccountInfo(token: string, accountId: string) {
-  const res = await fetch(`${META_API_BASE}/users/current/accounts/${accountId}`, {
+  const res = await fetch(
+    `${META_API_CLIENT_BASE}/users/current/accounts/${accountId}/account-information`,
+    {
     method: "GET",
     headers: {
-      "Authorization": `Bearer ${token}`,
+      "auth-token": token,
       "Content-Type": "application/json",
     },
   });
@@ -101,13 +113,10 @@ async function sendTradeSignal(
   accountId: string,
   signal: NonNullable<MT5Request["signal"]>,
 ) {
-  const side = signal.action === "BUY" ? "BUY" : "SELL";
-
   const body: Record<string, unknown> = {
-    actionType: "ORDER_TYPE_MARKET",
+    actionType: signal.action === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL",
     symbol: signal.symbol,
     volume: signal.volume,
-    orderType: side === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL",
   };
 
   if (signal.takeProfit !== undefined && signal.takeProfit > 0) {
@@ -118,11 +127,11 @@ async function sendTradeSignal(
   }
 
   const res = await fetch(
-    `${META_API_BASE}/users/current/accounts/${accountId}/trade`,
+    `${META_API_CLIENT_BASE}/users/current/accounts/${accountId}/trade`,
     {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${token}`,
+        "auth-token": token,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
@@ -143,21 +152,18 @@ async function closePosition(
   accountId: string,
   signal: NonNullable<MT5Request["signal"]>,
 ) {
-  const side = signal.action === "BUY" ? "SELL" : "BUY";
-
   const body: Record<string, unknown> = {
-    actionType: "ORDER_TYPE_MARKET",
+    actionType: signal.action === "BUY" ? "ORDER_TYPE_SELL" : "ORDER_TYPE_BUY",
     symbol: signal.symbol,
     volume: signal.volume,
-    orderType: side === "BUY" ? "ORDER_TYPE_BUY" : "ORDER_TYPE_SELL",
   };
 
   const res = await fetch(
-    `${META_API_BASE}/users/current/accounts/${accountId}/trade`,
+    `${META_API_CLIENT_BASE}/users/current/accounts/${accountId}/trade`,
     {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${token}`,
+        "auth-token": token,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),

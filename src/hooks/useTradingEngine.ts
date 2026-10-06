@@ -115,7 +115,7 @@ export function useTradingEngine(startingBalance: number) {
               id: 'feed-connected',
               time: Date.now(),
               level: 'success',
-              message: `Live Binance WebSocket connected. Streaming real-time BTC/USDT ${timeframeRef.current} candles.`,
+              message: `Live gold price feed connected. Streaming real-time XAU/USD ${timeframeRef.current} candles.`,
             };
             setLogs((prev) => [entry, ...prev].slice(0, MAX_LOGS));
           }

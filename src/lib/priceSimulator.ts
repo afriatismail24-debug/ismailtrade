@@ -1,8 +1,8 @@
 import type { Candle } from '@/types';
 
-const BASE_PRICE = 65000;
-const VOLATILITY = 0.0025;
-const DRIFT = 0.0001;
+const BASE_PRICE = 2650;
+const VOLATILITY = 0.0015;
+const DRIFT = 0.00005;
 
 export class PriceSimulator {
   private candles: Candle[] = [];

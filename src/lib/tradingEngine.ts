@@ -9,7 +9,8 @@ import type {
 } from '@/types';
 import { ema, macd, rsi } from './indicators';
 
-const SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT'];
+const SYMBOLS = ['XAU/USD'];
+const MT5_SYMBOL_MAP: Record<string, string> = { 'XAU/USD': 'XAUUSD' };
 const FEE_PCT = 0.001; // 0.1% per side
 const MIN_BALANCE = 5;
 
@@ -167,7 +168,7 @@ export class TradingEngine {
     this.dataMode = mode;
     if (mode === 'live') {
       this.candles = [];
-      this.log('info', 'Switched to LIVE market data feed (Binance WebSocket).');
+      this.log('info', 'Switched to LIVE market data feed (Gold price via PAXG/USDT).');
     } else {
       this.log('info', 'Switched to simulated data feed.');
     }
@@ -419,13 +420,13 @@ export class TradingEngine {
 
     this.log('trade', `[${tier.label}] ${side.toUpperCase()} ${symbol} @ ${price.toFixed(2)} | Qty: ${qty.toFixed(6)} | TP: ${tp.toFixed(2)} | SL: ${sl.toFixed(2)}`);
 
-    // Emit trade signal for MT5 copy
+    // Emit trade signal for MT5 copy — direction + volume only.
+    // TP/SL are managed by the engine; when a trade exits, a close signal is sent to MT5.
+    // Not sending TP/SL avoids rejection from the price gap between the feed and MT5.
     const tradeSignal: TradeSignal = {
-      symbol: symbol.replace('/', ''),
+      symbol: MT5_SYMBOL_MAP[symbol] ?? symbol.replace('/', ''),
       action: side === 'long' ? 'BUY' : 'SELL',
-      volume: parseFloat(qty.toFixed(2)),
-      takeProfit: parseFloat(tp.toFixed(2)),
-      stopLoss: parseFloat(sl.toFixed(2)),
+      volume: parseFloat(Math.max(0.01, qty / 100).toFixed(2)),
     };
     this.signalHandler?.(tradeSignal);
     if (tier.tier === 'tier1') this.log('info', `Scanning RSI (${ind.rsi.toFixed(1)})... Signal: ${signal.toUpperCase()}`);
@@ -448,9 +449,9 @@ export class TradingEngine {
 
     // Emit close signal for MT5 auto-copy
     const closeSignal: TradeSignal = {
-      symbol: t.symbol.replace('/', ''),
+      symbol: MT5_SYMBOL_MAP[t.symbol] ?? t.symbol.replace('/', ''),
       action: t.side === 'long' ? 'SELL' : 'BUY',
-      volume: parseFloat(t.quantity.toFixed(2)),
+      volume: parseFloat(Math.max(0.01, t.quantity / 100).toFixed(2)),
     };
     this.closeSignalHandler?.(closeSignal);
 

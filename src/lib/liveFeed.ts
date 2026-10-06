@@ -33,11 +33,11 @@ export type LiveFeedStatus = 'connecting' | 'connected' | 'reconnecting' | 'disc
 const MAX_RECONNECT = 10;
 
 function wsUrl(interval: Timeframe): string {
-  return `wss://stream.binance.com:9443/ws/btcusdt@kline_${interval}`;
+  return `wss://stream.binance.com:9443/ws/paxgusdt@kline_${interval}`;
 }
 
 function restUrl(interval: Timeframe): string {
-  return `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=200`;
+  return `https://api.binance.com/api/v3/klines?symbol=PAXGUSDT&interval=${interval}&limit=200`;
 }
 
 export class BinanceLiveFeed {

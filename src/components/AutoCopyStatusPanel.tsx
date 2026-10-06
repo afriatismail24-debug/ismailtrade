@@ -61,23 +61,28 @@ export function AutoCopyStatusPanel({ mt5Config, copySignals, copyEvents }: Prop
           {recentEvents.map((ev) => (
             <div
               key={ev.id}
-              className="flex items-center gap-2 text-[10px] bg-slate-800/50 rounded-md px-2 py-1.5"
+              className="flex flex-col gap-1 text-[10px] bg-slate-800/50 rounded-md px-2 py-1.5"
             >
-              {ev.action === 'BUY' ? (
-                <ArrowUpRight className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-              ) : (
-                <ArrowDownRight className="w-3 h-3 text-rose-400 flex-shrink-0" />
+              <div className="flex items-center gap-2">
+                {ev.action === 'BUY' ? (
+                  <ArrowUpRight className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                ) : (
+                  <ArrowDownRight className="w-3 h-3 text-rose-400 flex-shrink-0" />
+                )}
+                <span className={ev.action === 'BUY' ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                  {ev.action}
+                </span>
+                <span className="text-slate-300">{ev.volume} lots {ev.symbol}</span>
+                <span className={ev.status === 'success' ? 'text-emerald-400' : 'text-rose-400'}>
+                  {ev.status === 'success' ? 'OK' : 'FAIL'}
+                </span>
+                <span className="text-slate-500 ml-auto">
+                  {new Date(ev.time).toLocaleTimeString()}
+                </span>
+              </div>
+              {ev.status === 'error' && ev.message && (
+                <span className="text-rose-400 text-[9px] leading-tight pl-5 break-all">{ev.message}</span>
               )}
-              <span className={ev.action === 'BUY' ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
-                {ev.action}
-              </span>
-              <span className="text-slate-300">{ev.volume} lots {ev.symbol}</span>
-              <span className={ev.status === 'success' ? 'text-emerald-400' : 'text-rose-400'}>
-                {ev.status === 'success' ? 'OK' : 'FAIL'}
-              </span>
-              <span className="text-slate-500 ml-auto">
-                {new Date(ev.time).toLocaleTimeString()}
-              </span>
             </div>
           ))}
         </div>

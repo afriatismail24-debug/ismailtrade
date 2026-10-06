@@ -330,7 +330,7 @@ export function Dashboard() {
                 }`}
               >
                 <Wifi className="w-3.5 h-3.5" />
-                Live Binance
+                Live Gold Feed
               </button>
               <button
                 onClick={engine.switchToSimulated}
@@ -357,7 +357,7 @@ export function Dashboard() {
             <div className="flex-1 flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <label className="text-[11px] text-slate-400 uppercase tracking-wider">
-                  {mode === 'paper' ? 'Paper Balance (USDT)' : 'Account Balance (USDT)'}
+                  {mode === 'paper' ? 'Paper Balance' : 'Account Balance'}
                 </label>
                 <span className="text-sm font-bold text-sky-300 tabular-nums">${balanceInput.toFixed(2)}</span>
               </div>
@@ -422,7 +422,7 @@ export function Dashboard() {
             <div className="lg:col-span-2 bg-slate-900 rounded-xl border border-slate-800 p-4">
               {/* Timeframe selector + chart header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <h2 className="text-sm font-bold text-white">BTC/USDT — Live Chart</h2>
+                <h2 className="text-sm font-bold text-white">XAU/USD (Gold) — Live Chart</h2>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-0.5 bg-slate-800 rounded-lg p-0.5 border border-slate-700">
                     {TIMEFRAMES.map((tf) => {
