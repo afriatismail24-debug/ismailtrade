@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "AutoTrade Bot",
+    "slug": "autotrade-bot",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0f172a"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.autotrade.bot"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0f172a"
+      },
+      "package": "com.autotrade.bot"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-font"],
+    "extra": {
+      "SUPABASE_URL": "https://doedvmtlqlazjjgojipq.supabase.co",
+      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvZWR2bXRscWxhempqZ29qaXBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3NjA5MjUsImV4cCI6MjEwNTMzNjkyNX0.5fmIujSdMjDDXO8ijifpFvSEQfcqn7_2gUKgnflo5QE"
+    }
+  }
+}

@@ -108,6 +108,70 @@ async function getAccountInfo(token: string, accountId: string) {
   };
 }
 
+async function getAccountState(token: string, accountId: string): Promise<{ state: string; connectionStatus: string }> {
+  const res = await fetch(
+    `${META_API_BASE}/users/current/accounts/${accountId}`,
+    {
+      method: "GET",
+      headers: {
+        "auth-token": token,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Account state fetch failed (${res.status}): ${text}`);
+  }
+  const data = await res.json();
+  return {
+    state: data.state ?? "UNKNOWN",
+    connectionStatus: data.connectionStatus ?? "UNKNOWN",
+  };
+}
+
+async function deployAccount(token: string, accountId: string) {
+  const res = await fetch(
+    `${META_API_BASE}/users/current/accounts/${accountId}/deploy`,
+    {
+      method: "POST",
+      headers: {
+        "auth-token": token,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Account deploy failed (${res.status}): ${text}`);
+  }
+}
+
+async function waitForConnection(
+  token: string,
+  accountId: string,
+  maxWaitMs = 30000,
+): Promise<{ state: string; connectionStatus: string }> {
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    const status = await getAccountState(token, accountId);
+    if (status.connectionStatus === "DEPLOYED" || status.state === "DEPLOYED") {
+      return status;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  const last = await getAccountState(token, accountId);
+  return last;
+}
+
+async function ensureAccountReady(token: string, accountId: string) {
+  const status = await getAccountState(token, accountId);
+  if (status.state !== "DEPLOYED" && status.connectionStatus !== "DEPLOYED") {
+    await deployAccount(token, accountId);
+    await waitForConnection(token, accountId);
+  }
+}
+
 async function sendTradeSignal(
   token: string,
   accountId: string,
@@ -226,6 +290,7 @@ Deno.serve(async (req: Request) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
+      await ensureAccountReady(body.metaapiToken, accountId);
       const info = await getAccountInfo(body.metaapiToken, accountId);
       return new Response(
         JSON.stringify({ success: true, accountId, ...info }),
@@ -246,6 +311,7 @@ Deno.serve(async (req: Request) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
+      await ensureAccountReady(body.metaapiToken, accountId);
       const result = await sendTradeSignal(body.metaapiToken, accountId, body.signal);
       return new Response(
         JSON.stringify(result),
@@ -266,6 +332,7 @@ Deno.serve(async (req: Request) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
+      await ensureAccountReady(body.metaapiToken, accountId);
       const result = await closePosition(body.metaapiToken, accountId, body.signal);
       return new Response(
         JSON.stringify(result),
